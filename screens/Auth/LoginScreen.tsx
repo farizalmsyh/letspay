@@ -1,10 +1,34 @@
-import React from 'react';
-import {View} from 'react-native';
+import React, {useState} from 'react';
+import {Alert, View} from 'react-native';
 import { Container, Header, Left, Button, Icon, Body, Title, Right, Content, Text, Footer, FooterTab, Form, Item, Input, Label } from 'native-base';
-import { useNavigation  } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LoginScreen = () => {
-    const navigation = useNavigation();
+const LoginScreen = (props: any) => {
+    
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const SignIn = async ()=>{
+        fetch('http://192.168.1.101:3000/login',{
+            method:"POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body:JSON.stringify({
+                "email": email,
+                "password": password,
+            })
+        })
+        .then(res => res.json())
+        .then(async (data)=>{
+            try {
+                await AsyncStorage.setItem('token', data.token)
+                props.navigation.navigate("Home");
+            } catch (e) {
+                Alert.alert('Error', 'Login Failed !');
+            }
+        })
+    }
     return (
         <Container>
             <Content>
@@ -13,15 +37,18 @@ const LoginScreen = () => {
                 </View>
                 <Form>
                     <Item floatingLabel>
-                        <Label>Username</Label>
-                        <Input/>
+                        <Label>Email</Label>
+                        <Input onChangeText={(text) => {setEmail(text)}} value={email} autoCapitalize={'none'} />
                     </Item>
                     <Item floatingLabel>
                         <Label>Password</Label>
-                        <Input/>
+                        <Input onChangeText={(text) => {setPassword(text)}} value={password} secureTextEntry={true}/>
                     </Item>
-                    <Button onPress={() => navigation.navigate('Home')} style={{marginTop: 32, marginHorizontal: 16}} success    block>
+                    <Button onPress={() => SignIn()} style={{marginTop: 32, marginHorizontal: 16}} success block>
                         <Text>Submit</Text>
+                    </Button>
+                    <Button onPress={() => props.navigation.navigate('Register')} style={{marginTop: 10, marginHorizontal: 16}} transparent block>
+                        <Text>Don't have an account ? Sign Up</Text>
                     </Button>
                 </Form>
             </Content>
